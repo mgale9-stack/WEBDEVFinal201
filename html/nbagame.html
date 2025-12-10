@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Light The Beam Game</title>
+
+    <!-- Bootstrap (your nav uses bootstrap classes) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Your Beam Game CSS -->
+    <link rel="stylesheet" href="nbagame.css">
+    <style>/* ===== RESET ===== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* ===== NAVBAR OVERRIDES ===== */
+#sideNav {
+  background: linear-gradient(135deg, #1f2937, #0b1020) !important;
+  border-bottom: 1px solid rgba(148, 163, 184, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  padding: 10px 18px;
+}
+
+#sideNav .navbar-nav {
+  gap: 12px;
+  align-items: center;
+}
+
+#sideNav .nav-link {
+  display: inline-block;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #7c3aed, #4c1d95);
+  color: #f9fafb !important;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border: 1px solid rgba(167, 139, 250, 0.6);
+  box-shadow: 0 10px 24px rgba(76, 29, 149, 0.4);
+  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+}
+
+#sideNav .nav-link:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 30px rgba(76, 29, 149, 0.5);
+  filter: brightness(1.05);
+}
+
+#sideNav .navbar-toggler {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+/* ===== PAGE BACKGROUND ===== */
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    sans-serif;
+  background: radial-gradient(circle at top, #4c1d95 0, #020617 55%, #000 100%);
+  color: #e5e7eb;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.btn-accent {
+  background: linear-gradient(135deg, #a855f7, #7c3aed);
+  color: #f8fafc;
+  border: none;
+}
+
+.btn-accent:hover {
+  background: linear-gradient(135deg, #7c3aed, #5b21b6);
+  color: #fff;
+}
+
+/* ===== GAME WRAPPER ===== */
+.game {
+  max-width: 900px;
+  width: 100%;
+  background: rgba(15, 23, 42, 0.96);
+  border-radius: 18px;
+  padding: 24px 22px 30px;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.6);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+}
+
+.game-header {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.game-title {
+  font-size: 28px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.game-subtitle {
+  font-size: 14px;
+  color: #9ca3af;
+  margin-top: 5px;
+}
+
+/* ===== LAYOUT: ARENA + PANEL ===== */
+.game-body {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+  gap: 20px;
+}
+
+@media (max-width: 750px) {
+  .game-body {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== ARENA ===== */
+.arena-card {
+  background: radial-gradient(circle at top, #020617, #020617 60%, #000);
+  border-radius: 14px;
+  padding: 16px 16px 18px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.arena-label {
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  text-align: center;
+  color: #9ca3af;
+  margin-bottom: 10px;
+}
+
+.sky {
+  position: relative;
+  height: 230px;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background:
+    radial-gradient(circle at 50% -80%, rgba(168, 85, 247, 0.7), transparent 60%),
+    radial-gradient(circle at 10% 0%, rgba(96, 165, 250, 0.25), transparent 55%),
+    radial-gradient(circle at 90% 0%, rgba(251, 191, 36, 0.2), transparent 50%);
+  overflow: hidden;
+}
+
+.sky::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(248, 250, 252, 0.7) 1px, transparent 1px),
+    radial-gradient(circle, rgba(248, 250, 252, 0.4) 1px, transparent 1px);
+  background-size: 130px 130px, 90px 90px;
+  background-position: 0 0, 50px 40px;
+  opacity: 0.28;
+  pointer-events: none;
+}
+
+/* ===== BEAM ===== */
+.beam {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 60px;
+  width: 90px;
+  height: 0;
+  opacity: 0;
+  background: linear-gradient(
+    to top,
+    rgba(147, 51, 234, 0.9),
+    rgba(216, 180, 254, 0.8),
+    rgba(249, 250, 251, 0.03)
+  );
+  filter: blur(1px);
+  transition: height 0.35s ease-out, opacity 0.35s ease-out;
+}
+
+.beam-on {
+  height: 220px;
+  opacity: 1;
+  box-shadow:
+    0 0 25px rgba(167, 139, 250, 0.9),
+    0 0 55px rgba(147, 51, 234, 0.75),
+    0 0 120px rgba(129, 140, 248, 0.8);
+  animation: beamPulse 1.6s ease-in-out infinite alternate;
+}
+
+@keyframes beamPulse {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ===== GOLDEN 1 CENTER ===== */
+.arena-base {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  height: 70px;
+  background: linear-gradient(to top, #020617, #1f2937);
+  border-radius: 18px 18px 0 0;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+  box-shadow:
+    0 -4px 20px rgba(0, 0, 0, 0.8),
+    0 15px 35px rgba(0, 0, 0, 0.9);
+}
+
+.arena-roof {
+  position: absolute;
+  bottom: 46px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 180px;
+  height: 36px;
+  background: linear-gradient(to top, #111827, #020617);
+  border-radius: 12px 12px 2px 2px;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+.arena-sign {
+  position: absolute;
+  bottom: 55px;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 2px 12px;
+  border-radius: 999px;
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+  color: #f9fafb;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  border: 1px solid rgba(248, 250, 252, 0.8);
+}
+
+.arena-crowd {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 210px;
+  height: 26px;
+  border-radius: 14px 14px 0 0;
+  background: repeating-linear-gradient(
+    to right,
+    #020617,
+    #020617 4px,
+    #0f172a 4px,
+    #0f172a 8px
+  );
+}
+
+.arena-lights {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 190px;
+  display: flex;
+  justify-content: space-between;
+  padding: 0 10px;
+}
+
+.arena-light {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: #4b5563;
+  box-shadow: 0 0 4px rgba(148, 163, 184, 0.5);
+  transition: background 0.2s, box-shadow 0.2s;
+}
+
+.arena-light.on {
+  background: #a855f7;
+  box-shadow:
+    0 0 7px rgba(196, 181, 253, 0.9),
+    0 0 12px rgba(147, 51, 234, 0.9);
+}
+
+/* ===== CONTROLS ===== */
+.controls {
+  margin-top: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+}
+
+.btn {
+  border: none;
+  border-radius: 999px;
+  padding: 9px 22px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.15s ease, background 0.15s ease;
+}
+
+.btn-primary {
+  background: linear-gradient(to right, #7c3aed, #a855f7);
+  color: white;
+  box-shadow: 0 8px 18px rgba(129, 140, 248, 0.5);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 22px rgba(129, 140, 248, 0.7);
+}
+
+.btn-secondary {
+  background: #111827;
+  color: #e5e7eb;
+  border: 1px solid rgba(148, 163, 184, 0.7);
+}
+
+.btn-secondary:hover {
+  background: #020617;
+}
+
+.status {
+  margin-top: 10px;
+  text-align: center;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.status span {
+  color: #c4b5fd;
+  font-weight: 600;
+}
+
+/* ===== SIDE PANEL ===== */
+.panel {
+  background: rgba(15, 23, 42, 0.96);
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.6);
+  padding: 14px 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.panel-title {
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9ca3af;
+}
+
+.wins-number {
+  font-size: 28px;
+  font-weight: 800;
+  margin-top: 6px;
+}
+
+.wins-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.recap-box {
+  margin-top: 8px;
+  background: #020617;
+  border-radius: 10px;
+  padding: 10px 12px;
+  border: 1px solid rgba(55, 65, 81, 0.9);
+  font-size: 13px;
+  min-height: 64px;
+}
+
+.recap-heading {
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #e5e7eb;
+}
+
+.recap-text {
+  color: #d1d5db;
+  line-height: 1.5;
+}
+
+.panel-note {
+  font-size: 11px;
+  color: #6b7280;
+  margin-top: 6px;
+}
+
+/* ===== MINI-GAME: CLUTCH FREE THROW ===== */
+.minigame {
+  margin-top: 18px;
+  padding: 12px 12px 16px;
+  background: rgba(76, 29, 149, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.35);
+  border-radius: 12px;
+}
+
+.minigame h3 {
+  font-size: 17px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.minigame p {
+  font-size: 14px;
+  color: #e5e7eb;
+  margin-bottom: 10px;
+}
+
+.shot-meter {
+  position: relative;
+  height: 26px;
+  background: #0f172a;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.5);
+  margin-bottom: 12px;
+}
+
+.shot-zone {
+  position: absolute;
+  top: 0;
+  left: 42%;
+  width: 16%;
+  height: 100%;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  opacity: 0.85;
+}
+
+.shot-marker {
+  position: absolute;
+  top: 0;
+  width: 6%;
+  height: 100%;
+  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  box-shadow: 0 0 16px rgba(251, 191, 36, 0.6);
+  transform: translateX(-50%);
+}
+
+.mini-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.shot-status {
+  margin-top: 6px;
+  font-size: 13px;
+  color: #cbd5e1;
+}
+</style>
+</head>
+
+
+<body>
+
+<!-- ====== NAVIGATION (your code kept exactly the same) ====== -->
+<nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top" id="sideNav">
+    <a class="navbar-brand js-scroll-trigger" href="#page-top"></a>
+
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarResponsive"
+        aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav">
+            <li class="nav-item"><a class="nav-link js-scroll-trigger" href="../index.html">My Resume</a></li>
+            <li class="nav-item"><a class="nav-link js-scroll-trigger" href="./pingpong.html">Sacramento Kings</a></li>
+        </ul>
+    </div>
+</nav>
+
+
+<!-- ====== PAGE SPACING (Bootstrap navbar overlaps content) ====== -->
+<div style="margin-top: 130px;"></div>
+
+
+<!-- ========================================================= -->
+<!--                 LIGHT THE BEAM GAME AREA                  -->
+<!-- ========================================================= -->
+
+<div class="game">
+    <header class="game-header">
+      <h1 class="game-title">Light The Beam</h1>
+      <p class="game-subtitle">Golden 1 Center • Sacramento Kings</p>
+    </header>
+
+    <main class="game-body">
+      <!-- LEFT: Arena & Buttons -->
+      <section class="arena-card">
+        <div class="arena-label">Golden 1 Center · Sacramento</div>
+
+        <div class="sky">
+          <div id="beam" class="beam"></div>
+
+          <!-- Arena pieces -->
+          <div class="arena-base">
+            <div class="arena-crowd"></div>
+            <div class="arena-lights">
+              <div class="arena-light" id="light1"></div>
+              <div class="arena-light" id="light2"></div>
+              <div class="arena-light" id="light3"></div>
+              <div class="arena-light" id="light4"></div>
+            </div>
+          </div>
+          <div class="arena-roof"></div>
+          <div class="arena-sign">Sacramento Kings</div>
+        </div>
+
+        <div class="controls">
+          <button id="startShot" class="btn btn-primary">Start Clutch Free Throw</button>
+          <button id="shootBtn" class="btn btn-accent" disabled>Release Shot</button>
+          <button id="resetBtn" class="btn btn-secondary">Reset Season</button>
+        </div>
+
+        <div class="minigame">
+          <h3>Clutch Free Throw</h3>
+          <p>Start the possession, then time your release so the marker lands in the green. Nail it to light the beam.</p>
+          <div class="shot-meter">
+            <div id="shotZone" class="shot-zone"></div>
+            <div id="shotMarker" class="shot-marker"></div>
+          </div>
+          <div class="shot-status" id="shotStatus">
+            Press “Start Clutch Free Throw” to begin the possession.
+          </div>
+        </div>
+
+        <div id="status" class="status">
+          Beam status: <span>OFF</span> — waiting for a Kings win.
+        </div>
+      </section>
+
+      <!-- RIGHT: Score & Recap -->
+      <aside class="panel">
+        <div>
+  <div class="panel-title">Season Record</div>
+  <div id="record" class="wins-number">0–0</div>
+  <div class="wins-label">Wins – Losses</div>
+</div>
+
+
+        <div class="recap-box">
+          <div class="recap-heading">Game Recap</div>
+          <div id="recap" class="recap-text">
+            Time the clutch free throw in the green to decide if Sacramento lights the beam tonight.
+          </div>
+        </div>
+
+        <div class="panel-note">
+          Not an official NBA product. Just a Kings fan hyping wins.
+        </div>
+      </aside>
+    </main>
+</div>
+
+<!-- ====== SCRIPTS ====== -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>// ===== SELECT ELEMENTS =====
+const beam = document.getElementById("beam");
+const lights = [
+  document.getElementById("light1"),
+  document.getElementById("light2"),
+  document.getElementById("light3"),
+  document.getElementById("light4")
+];
+const startShotBtn = document.getElementById("startShot");
+const shootBtn = document.getElementById("shootBtn");
+const resetBtn = document.getElementById("resetBtn");
+const statusEl = document.getElementById("status");
+const recordEl = document.getElementById("record");
+const recapEl = document.getElementById("recap");
+const shotZone = document.getElementById("shotZone");
+const shotMarker = document.getElementById("shotMarker");
+const shotStatus = document.getElementById("shotStatus");
+const beamSound = document.getElementById("beamSound");
+
+let wins = 0;
+let losses = 0;
+
+// Mini-game state
+let markerPos = 10;
+let markerDir = 1;
+let animId = null;
+let zoneMin = 42; // percent
+let zoneMax = 58; // percent
+let markerSpeed = 0.9;
+let speedTuning = 0; // adjusts speed up/down based on streak
+
+// Possible opponents
+const opponents = [
+  "Los Angeles Lakers",
+  "Golden State Warriors",
+  "Phoenix Suns",
+  "Dallas Mavericks",
+  "Denver Nuggets",
+  "Los Angeles Clippers",
+  "Portland Trail Blazers",
+  "San Antonio Spurs",
+  "Oklahoma City Thunder",
+  "Memphis Grizzlies"
+];
+
+// Phrases when Kings win
+const winPhrases = [
+  "Fox drops 38 and 9 while Sabonis grabs 18 boards. Beam absolutely earned.",
+  "Fourth-quarter comeback complete. Golden 1 is shaking as the beam hits the sky.",
+  "Bench mob explodes, everyone scores, and the purple light takes over Sacramento.",
+  "Lockdown defense in the final two minutes seals it. The beam does the talking.",
+  "Overtime thriller. Fox dagger. Crowd loses its mind. Beam time.",
+  "Sabonis dominates the paint and the Kings win the rebounding battle by 20.",
+  "Rookie drills back-to-back threes. The arena erupts. Beam goes up instantly.",
+  "Fast-break clinic: steals, dunks, and a statement win at home.",
+  "Perfect ATO drawn by coach. Game-winner out of the timeout, beam follows.",
+  "Historic night from deep. Threes rain, and the beam reigns."
+];
+
+// Phrases when Kings lose
+const lossPhrases = [
+  "Cold shooting night from deep. The beam stays dark.",
+  "Turnovers down the stretch hurt. Golden 1 gets quiet.",
+  "Opponent goes on a late run and steals this one. No beam tonight.",
+  "Free throws come back to haunt the Kings. Beam button never gets pressed.",
+  "Defense couldn’t get the last stop. Tough loss in Sacramento.",
+  "Energy felt off all game. The beam will have to wait.",
+  "Foul trouble slows down the Kings’ stars. No purple light tonight.",
+  "Shots rim out in the clutch. Crowd walks out in silence.",
+  "Great effort, but the comeback falls short. The sky stays dark.",
+  "Back-to-back fatigue shows. Kings will regroup for the next one."
+];
+
+function randomItem(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function updateRecord() {
+  recordEl.textContent = `${wins}–${losses}`;
+}
+
+// ===== VISUAL HELPERS =====
+function turnOnVisuals() {
+  beam.classList.add("beam-on");
+  lights.forEach(light => light.classList.add("on"));
+
+  // Play sound when beam lights
+  if (beamSound) {
+    try {
+      beamSound.currentTime = 0;
+      beamSound.play().catch(() => {});
+    } catch (e) {
+      // ignore any autoplay errors
+    }
+  }
+}
+
+function turnOffVisuals() {
+  beam.classList.remove("beam-on");
+  lights.forEach(light => light.classList.remove("on"));
+}
+
+// ===== GAME OUTCOMES =====
+function handleWin() {
+  turnOnVisuals();
+
+  wins++;
+  updateRecord();
+
+  const opponent = randomItem(opponents);
+  const phrase = randomItem(winPhrases);
+
+  const kingsScore = Math.floor(Math.random() * 30) + 105; // 105–134
+  const oppScore = kingsScore - (Math.floor(Math.random() * 12) + 1); // close-ish
+
+  recapEl.textContent =
+    `Kings ${kingsScore} — ${oppScore} ${opponent}. ${phrase}`;
+
+  statusEl.innerHTML =
+    'Beam status: <span>ON</span> — Sacramento just lit the beam!';
+}
+
+function handleLoss() {
+  // No beam on a loss
+  turnOffVisuals();
+
+  losses++;
+  updateRecord();
+
+  const opponent = randomItem(opponents);
+  const phrase = randomItem(lossPhrases);
+
+  const oppScore = Math.floor(Math.random() * 30) + 105; // 105–134
+  const kingsScore = oppScore - (Math.floor(Math.random() * 12) + 1); // close-ish
+
+  recapEl.textContent =
+    `${opponent} ${oppScore} — ${kingsScore} Kings. ${phrase}`;
+
+  statusEl.innerHTML =
+    'Beam status: <span>OFF</span> — Kings took an L tonight. No beam.';
+  speedTuning = Math.max(speedTuning - 0.08, -0.4); // losses make the next attempt a bit slower
+}
+
+// ===== MINI-GAME LOOP =====
+function animateMarker() {
+  markerPos += markerDir * markerSpeed;
+  if (markerPos >= 98) {
+    markerPos = 98;
+    markerDir = -1;
+  }
+  if (markerPos <= 2) {
+    markerPos = 2;
+    markerDir = 1;
+  }
+  shotMarker.style.left = `${markerPos}%`;
+  animId = requestAnimationFrame(animateMarker);
+}
+
+function startClutchFreeThrow() {
+  if (animId) cancelAnimationFrame(animId);
+
+  // Randomize zone size and position
+  const zoneWidth = Math.floor(Math.random() * 12) + 12; // 12%–24%
+  const zoneStart = Math.floor(Math.random() * (100 - zoneWidth - 8)) + 4; // keep padding
+  zoneMin = zoneStart;
+  zoneMax = zoneStart + zoneWidth;
+  shotZone.style.left = `${zoneStart}%`;
+  shotZone.style.width = `${zoneWidth}%`;
+
+  // Randomize marker speed with difficulty scaling by wins
+  const baseSpeed = Math.min(0.8 + wins * 0.05 + speedTuning, 2.0); // speed ramps with wins and tuning, capped
+  markerSpeed = baseSpeed + Math.random() * 0.6; // add a little randomness
+
+  markerPos = Math.random() * 60 + 20;
+  markerDir = Math.random() > 0.5 ? 1 : -1;
+  shotMarker.style.left = `${markerPos}%`;
+  startShotBtn.disabled = true;
+  shootBtn.disabled = false;
+  shotStatus.textContent = `Dial in your timing—zone is ${zoneWidth}% wide and the meter is moving ${markerSpeed.toFixed(2)}x (wins make it faster). Hit Release in the green.`;
+  statusEl.innerHTML = 'Beam status: <span>ARMED</span> — waiting on your clutch free throw.';
+  animId = requestAnimationFrame(animateMarker);
+}
+
+function resolveShot() {
+  if (!animId) return;
+  cancelAnimationFrame(animId);
+  animId = null;
+  shootBtn.disabled = true;
+  startShotBtn.disabled = false;
+
+  const inZone = markerPos >= zoneMin && markerPos <= zoneMax;
+  if (inZone) {
+    shotStatus.textContent = "Splash! The free throw is good—beam that sky.";
+    handleWin();
+  } else {
+    shotStatus.textContent = "Rimmed out. The crowd groans and the beam stays dark.";
+    handleLoss();
+  }
+}
+
+// ===== RESET SEASON =====
+function resetSeason() {
+  wins = 0;
+  losses = 0;
+  updateRecord();
+  recapEl.textContent =
+    "Season reset. Record is clean. Golden 1 Center is ready for the next win and the next beam.";
+  turnOffVisuals();
+  statusEl.innerHTML =
+    'Beam status: <span>OFF</span> — waiting for a Kings win.';
+  shotStatus.textContent = "Press “Start Clutch Free Throw” to begin the possession.";
+  startShotBtn.disabled = false;
+  shootBtn.disabled = true;
+  if (animId) {
+    cancelAnimationFrame(animId);
+    animId = null;
+  }
+}
+
+// ===== BUTTON HANDLERS =====
+startShotBtn.addEventListener("click", startClutchFreeThrow);
+shootBtn.addEventListener("click", resolveShot);
+resetBtn.addEventListener("click", resetSeason);
+
+// Initialize
+resetSeason();
+</script>
+</body>
+</html>

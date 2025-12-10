@@ -1,0 +1,19 @@
+:root {
+    /* Override theme accent to Sacramento Kings-inspired purple */
+    --bs-primary: #4b2e83;
+    --bs-primary-rgb: 75, 46, 131;
+    --bs-link-color: #4b2e83;
+    --bs-link-hover-color: #3e256d;
+}
+
+body{
+    font-family: "", Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif,;
+}
+
+/* Keep profile photo perfectly circular even if the source image isn't square */
+.img-profile {
+    width: 10rem;
+    height: 10rem;
+    object-fit: cover;
+    border-radius: 50%;
+}
